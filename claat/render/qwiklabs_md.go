@@ -23,25 +23,26 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+
 	"github.com/googlecodelabs/tools/claat/nodes"
 )
 
 // MD renders nodes as markdown for the target env.
-func MD(ctx Context, nodes ...nodes.Node) (string, error) {
+func QwiklabsMD(ctx Context, nodes ...nodes.Node) (string, error) {
 	var buf bytes.Buffer
-	if err := WriteMD(&buf, ctx.Env, ctx.Format, nodes...); err != nil {
+	if err := WriteQwiklabsMD(&buf, ctx.Env, ctx.Format, nodes...); err != nil {
 		return "", err
 	}
 	return buf.String(), nil
 }
 
-// WriteMD does the same as MD but outputs rendered markup to w.
-func WriteMD(w io.Writer, env string, fmt string, nodes ...nodes.Node) error {
-	mw := mdWriter{w: w, env: env, format: fmt, Prefix: []byte("")}
+// WriteQwiklabsMD does the same as MD but outputs rendered markup to w.
+func WriteQwiklabsMD(w io.Writer, env string, fmt string, nodes ...nodes.Node) error {
+	mw := qwiklabsMdWriter{w: w, env: env, format: fmt, Prefix: []byte("")}
 	return mw.write(nodes...)
 }
 
-type mdWriter struct {
+type qwiklabsMdWriter struct {
 	w                  io.Writer // output writer
 	env                string    // target environment
 	format             string    // target template
@@ -52,7 +53,7 @@ type mdWriter struct {
 	Prefix             []byte // prefix for e.g. blockquote content
 }
 
-func (mw *mdWriter) writeBytes(b []byte) {
+func (mw *qwiklabsMdWriter) writeBytes(b []byte) {
 	if mw.err != nil {
 		return
 	}
@@ -63,31 +64,29 @@ func (mw *mdWriter) writeBytes(b []byte) {
 	_, mw.err = mw.w.Write(b)
 }
 
-func (mw *mdWriter) writeString(s string) {
+func (mw *qwiklabsMdWriter) writeString(s string) {
 	mw.writeBytes([]byte(s))
 }
 
-func (mw *mdWriter) writeEscape(s string) {
+func (mw *qwiklabsMdWriter) writeEscape(s string) {
 	s = html.EscapeString(s)
 	mw.writeString(ReplaceDoubleCurlyBracketsWithEntity(s))
 }
 
-func (mw *mdWriter) space() {
+func (mw *qwiklabsMdWriter) space() {
 	if !mw.lineStart {
 		mw.writeString(" ")
 	}
 }
 
-func (mw *mdWriter) newBlock() {
+func (mw *qwiklabsMdWriter) newBlock() {
 	if !mw.lineStart {
 		mw.writeString("\n")
-		mw.writeString("\n")
 	}
-  // Todo: Remove line breaks in Text block 
-//	mw.writeString("\n")
+	mw.writeString("\n")
 }
 
-func (mw *mdWriter) matchEnv(v []string) bool {
+func (mw *qwiklabsMdWriter) matchEnv(v []string) bool {
 	if len(v) == 0 || mw.env == "" {
 		return true
 	}
@@ -95,7 +94,7 @@ func (mw *mdWriter) matchEnv(v []string) bool {
 	return i < len(v) && v[i] == mw.env
 }
 
-func (mw *mdWriter) write(nodesToWrite ...nodes.Node) error {
+func (mw *qwiklabsMdWriter) write(nodesToWrite ...nodes.Node) error {
 	for _, n := range nodesToWrite {
 		if !mw.matchEnv(n.Env()) {
 			continue
@@ -114,10 +113,7 @@ func (mw *mdWriter) write(nodesToWrite ...nodes.Node) error {
 		case *nodes.ListNode:
 			mw.list(n)
 		case *nodes.ImportNode:
-			if len(n.Content.Nodes) == 0 {
-				break
-			}
-			mw.write(n.Content.Nodes...)
+			mw.importElem(n)
 		case *nodes.ItemsListNode:
 			mw.itemsList(n)
 		case *nodes.GridNode:
@@ -138,88 +134,43 @@ func (mw *mdWriter) write(nodesToWrite ...nodes.Node) error {
 	return nil
 }
 
-func (mw *mdWriter) text(n *nodes.TextNode) {
+func (mw *qwiklabsMdWriter) text(n *nodes.TextNode) {
 	tr := strings.TrimLeft(n.Value, " \t\n\r\f\v")
 	left := n.Value[0:(len(n.Value) - len(tr))]
 	t := strings.TrimRight(tr, " \t\n\r\f\v")
 	right := tr[len(t):len(tr)]
 
-  // TODO: Ensure break added for watermark
-  var isEndWatermark bool
-
-  // TODO: Ensure break added for watermark
-  if strings.Contains(t, "Last Updated"){
-    isEndWatermark = true;
-  }
-
-  if strings.Contains(t, "Last Tested"){
-    isEndWatermark = true;
-  }
-
-  // TODO: Automate Date update for String t
-
-
 	mw.writeString(left)
 
-  // TODO: Replace with HTML Code
 	if n.Bold {
-		//mw.writeString("**")
-		mw.writeString("<strong>")
+		mw.writeString("**")
 	}
-  
 	if n.Italic {
 		mw.writeString("*")
 	}
-
 	if n.Code {
 		mw.writeString("`")
 	}
 
-  // TODO: Enable ql-* custom block to be used in GDoc
-//	t = strings.Replace(t, "<", "&lt;", -1)
-//	t = strings.Replace(t, ">", "&gt;", -1)
+	t = strings.Replace(t, "<", "&lt;", -1)
+	t = strings.Replace(t, ">", "&gt;", -1)
 
-  mw.writeString(t)
+	mw.writeString(t)
 
-  if strings.Contains(t, "</ql-hint>"){
-	  mw.writeString("\n\n")
-  }
-
-  if strings.Contains(t, "</ql-multiple-choice-probe>"){
-	  mw.writeString("\n\n")
-  }
-
-  // TODO: Ensure break added for watermark
-  // Ensure line break added for watermark
-  if isEndWatermark {
-	  mw.writeString("\n\n")
-  }
-  
-
-  // TODO: Replace HTML formatting with HTML Code
 	if n.Code {
 		mw.writeString("`")
 	}
-
 	if n.Italic {
 		mw.writeString("*")
 	}
-
 	if n.Bold {
-    // TODO: Amend so strong is rendered within the document
-    // Use strong as this can be rendered inside an Info/Warning box
-		//mw.writeString("**")
-		mw.writeString("</strong>")
+		mw.writeString("**")
 	}
 
 	mw.writeString(right)
-  // TODO: Not Codelab compatible
-//  if n.Bold {
-//	  mw.writeString("\n\n")
-//  }
 }
 
-func (mw *mdWriter) image(n *nodes.ImageNode) {
+func (mw *qwiklabsMdWriter) image(n *nodes.ImageNode) {
 	mw.space()
 	mw.writeString("<img ")
 	mw.writeString(fmt.Sprintf("src=%q ", n.Src))
@@ -240,12 +191,10 @@ func (mw *mdWriter) image(n *nodes.ImageNode) {
 	}
 
 	mw.writeString("/>")
-	mw.writeString("\n")
-	mw.writeString("\n")
 }
 
-func (mw *mdWriter) url(n *nodes.URLNode) {
-//	mw.space()
+func (mw *qwiklabsMdWriter) url(n *nodes.URLNode) {
+	mw.space()
 	if n.URL != "" {
 		// Look-ahead for button syntax.
 		if _, ok := n.Content.Nodes[0].(*nodes.ButtonNode); ok {
@@ -268,38 +217,28 @@ func (mw *mdWriter) url(n *nodes.URLNode) {
 	}
 }
 
-func (mw *mdWriter) code(n *nodes.CodeNode) {
+func (mw *qwiklabsMdWriter) code(n *nodes.CodeNode) {
 	if n.Empty() {
 		return
 	}
 	mw.newBlock()
 	defer mw.writeString("\n")
-  // TODO: Remove the use of code ticks
-	// mw.writeString("```")
+	mw.writeString("```")
 	if n.Term {
-    // TODO: Replace code ticks with ql-code-block 
-    // Default to use bash noWrap
-		// mw.writeString("bash noWrap")
-	  mw.writeString("\n")
-	  mw.writeString("<ql-code-block bash templated noWrap>")
-		// mw.writeString("console")
+		//mw.writeString("console")
+		mw.writeString("bash noWrap")
 	} else {
 		mw.writeString(n.Lang)
 	}
 	mw.writeString("\n")
 	mw.writeString(n.Value)
-  
 	if !mw.lineStart {
 		mw.writeString("\n")
 	}
-
-  // TODO: Close the code block 
-	// mw.writeString("```")
-	mw.writeString("</ql-code-block>")
-	mw.writeString("\n")
+	mw.writeString("```")
 }
 
-func (mw *mdWriter) list(n *nodes.ListNode) {
+func (mw *qwiklabsMdWriter) list(n *nodes.ListNode) {
 	if n.Block() == true {
 		mw.newBlock()
 	}
@@ -309,12 +248,11 @@ func (mw *mdWriter) list(n *nodes.ListNode) {
 	}
 }
 
-func (mw *mdWriter) itemsList(n *nodes.ItemsListNode) {
+func (mw *qwiklabsMdWriter) itemsList(n *nodes.ItemsListNode) {
 	mw.isWritingList = true
 	if n.Block() == true {
 		mw.newBlock()
 	}
-  // TODO: Replace with HTML Unordered List
 	for i, item := range n.Items {
 		s := "* "
 		if n.Type() == nodes.NodeItemsList && n.Start > 0 {
@@ -326,22 +264,17 @@ func (mw *mdWriter) itemsList(n *nodes.ItemsListNode) {
 			mw.writeString("\n")
 		}
 	}
-  // TODO: Add list space
-  mw.writeString("\n")
 	mw.isWritingList = false
 }
 
-func (mw *mdWriter) infobox(n *nodes.InfoboxNode) {
+func (mw *qwiklabsMdWriter) infobox(n *nodes.InfoboxNode) {
 	// InfoBoxes are comprised of a ListNode with the contents of the InfoBox.
 	// Writing the ListNode directly results in extra newlines in the md output
 	// which breaks the formatting. So instead, write the ListNode's children
 	// directly and don't write the ListNode itself.
 	mw.newBlock()
-  // TODO: Replace aside with infobox/warningbox
-	// k := "aside positive"
 	k := "<ql-infobox>"
 	if n.Kind == nodes.InfoboxNegative {
-		// k = "aside negative"
 		k = "<ql-warningbox>"
 	}
 	mw.Prefix = []byte("")
@@ -352,22 +285,16 @@ func (mw *mdWriter) infobox(n *nodes.InfoboxNode) {
 		mw.write(cn)
 	}
 
-  // TODO: Close 
-	mw.Prefix = []byte("")
-
-  // TODO: Cloud the info/warningbox
-	// k := "aside positive"
 	k = "</ql-infobox>"
 	if n.Kind == nodes.InfoboxNegative {
-		// k = "aside negative"
 		k = "</ql-warningbox>"
 	}
+
 	mw.Prefix = []byte("")
 	mw.writeString(k)
-	mw.writeString("\n")
 }
 
-func (mw *mdWriter) survey(n *nodes.SurveyNode) {
+func (mw *qwiklabsMdWriter) survey(n *nodes.SurveyNode) {
 	mw.newBlock()
 	mw.writeString("<form>")
 	mw.writeString("\n")
@@ -386,7 +313,7 @@ func (mw *mdWriter) survey(n *nodes.SurveyNode) {
 	mw.writeString("</form>")
 }
 
-func (mw *mdWriter) header(n *nodes.HeaderNode) {
+func (mw *qwiklabsMdWriter) header(n *nodes.HeaderNode) {
 	mw.newBlock()
 	mw.writeString(strings.Repeat("#", n.Level+1))
 	mw.writeString(" ")
@@ -396,21 +323,14 @@ func (mw *mdWriter) header(n *nodes.HeaderNode) {
 	}
 }
 
-func (mw *mdWriter) youtube(n *nodes.YouTubeNode) {
+func (mw *qwiklabsMdWriter) youtube(n *nodes.YouTubeNode) {
 	if !mw.isWritingList {
 		mw.newBlock()
 	}
-
-  // TODO: Video should be on a new Block
-	mw.newBlock()	
-
-	mw.writeString("\n")
-  // TODO: Replace video control with ql-video element
-	// mw.writeString(fmt.Sprintf(`<video id="%s"></video>`, n.VideoID))
-	mw.writeString(fmt.Sprintf(`<ql-video youtubeId="%s"></ql-video>`, n.VideoID))
+	mw.writeString(fmt.Sprintf(`<video id="%s"></video>`, n.VideoID))
 }
 
-func (mw *mdWriter) table(n *nodes.GridNode) {
+func (mw *qwiklabsMdWriter) table(n *nodes.GridNode) {
 	// If table content is empty, don't output the table.
 	if n.Empty() {
 		return
@@ -426,7 +346,7 @@ func (mw *mdWriter) table(n *nodes.GridNode) {
 
 			// Check cell content for newlines and replace with inline HTML if newlines are present.
 			var nw bytes.Buffer
-			WriteMD(&nw, mw.env, mw.format, cell.Content.Nodes...)
+			WriteQwiklabsMD(&nw, mw.env, mw.format, cell.Content.Nodes...)
 			if bytes.ContainsRune(nw.Bytes(), '\n') {
 				for _, cn := range cell.Content.Nodes {
 					cn.MutateBlock(false) // don't treat content as a new block
@@ -460,12 +380,24 @@ func (mw *mdWriter) table(n *nodes.GridNode) {
 	}
 }
 
-func maxColsInTable(n *nodes.GridNode) int {
-	m := 0
-	for _, row := range n.Rows {
-		if len(row) > m {
-			m = len(row)
-		}
+func (mw *qwiklabsMdWriter) importElem(n *nodes.ImportNode) {
+	title := n.Title
+	if title == "" {
+		title = n.URL
 	}
-	return m
+
+	mw.newBlock()
+	mw.writeString("[[import ")
+	mw.writeString(title)
+	mw.writeString("]]")
 }
+
+// func maxColsInTable(n *nodes.GridNode) int {
+// 	m := 0
+// 	for _, row := range n.Rows {
+// 		if len(row) > m {
+// 			m = len(row)
+// 		}
+// 	}
+// 	return m
+// }

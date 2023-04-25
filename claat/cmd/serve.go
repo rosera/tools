@@ -24,14 +24,28 @@ import (
 // CmdServe is the "claat serve ..." subcommand.
 // addr is the hostname and port to bind the web server to.
 // It returns a process exit code.
-func CmdServe(addr string) int {
-	http.Handle("/", http.FileServer(http.Dir(".")))
-	log.Printf("Serving codelabs on %s, opening browser tab now...", addr)
+// rosera: Add a parameter containing the directory to serve
+func CmdServe(addr string, serveDir string) int {
+  if (serveDir == "."){
+	  log.Printf("Serving codelabs from %s", serveDir)
+    // Serve the current directory
+	  http.Handle("/", http.FileServer(http.Dir(".")))
+  } else {
+	  log.Printf("Serving codelabs from %s", serveDir)
+    // Serve the specified directory
+	  http.Handle("/", http.FileServer(http.Dir(serveDir)))
+  }
 	ch := make(chan error, 1)
 	go func() {
+	  log.Printf("Serving codelabs on %s", addr)
 		ch <- http.ListenAndServe(addr, nil)
 	}()
-	openBrowser("http://" + addr)
+  // rosera: Serve from a directory rather than root 
+	openBrowser("http://" + addr + "/" + serveDir)
+
+  // rosera: Serve from a storage bucket
+  //openBrowser("https://storage.googleapis.com/qwiklabs-lab-architect-rosera/labs/index.html")
+  //openBrowser("https://drive.google.com/drive/folders/1PU64mu1Yvm023OKefdiEX4Jl5H6V15fp?usp=sharing")
 	log.Fatalf("claat serve: %v", <-ch)
 	return 0
 }
@@ -44,6 +58,8 @@ func openBrowser(url string) error {
 		args = []string{"open"}
 	case "windows":
 		args = []string{"cmd", "/c", "start"}
+	case "linux":
+		args = []string{"xdg-open"}
 	default:
 		args = []string{"xdg-open"}
 	}

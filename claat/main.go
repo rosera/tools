@@ -40,7 +40,8 @@ var (
 	version string // set by linker -X
 
 	// Flags.
-	addr         = flag.String("addr", "localhost:9090", "hostname and port to bind web server to")
+  // rosera: Change Port Address addr         = flag.String("addr", "localhost:9090", "hostname and port to bind web server to")
+	addr         = flag.String("addr", "localhost:8080", "hostname and port to bind web server to")
 	authToken    = flag.String("auth", "", "OAuth2 Bearer token; alternative credentials override.")
 	expenv       = flag.String("e", "web", "codelab environment")
 	extra        = flag.String("extra", "", "Additional arguments to pass to format templates. JSON object of string,string key values.")
@@ -49,6 +50,8 @@ var (
 	passMetadata = flag.String("pass_metadata", "", "Metadata fields to pass through to the output. Comma-delimited list of field names.")
 	prefix       = flag.String("prefix", "https://storage.googleapis.com", "URL prefix for html format")
 	tmplout      = flag.String("f", "html", "output format")
+  // rosera: Add a directory option to serve files
+	serveDir     = flag.String("dir", ".", "serve content from this directory")
 )
 
 func main() {
@@ -87,7 +90,8 @@ func main() {
 			Tmplout:      *tmplout,
 		})
 	case "serve":
-		exitCode = cmd.CmdServe(*addr)
+    // rosera: Add a directory to serve content from
+		exitCode = cmd.CmdServe(*addr, *serveDir)
 	case "update":
 		exitCode = cmd.CmdUpdate(cmd.CmdUpdateOptions{
 			AuthToken:    *authToken,

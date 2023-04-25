@@ -7,6 +7,8 @@ func NewImportNode(url string) *ImportNode {
 		node:    node{typ: NodeImport},
 		Content: NewListNode(),
 		URL:     url,
+    // rosera: Add Title element
+    Title:   "qwiklabs",
 	}
 }
 
@@ -15,6 +17,8 @@ type ImportNode struct {
 	node
 	URL     string
 	Content *ListNode
+  // rosera: Add Title element
+	Title   string
 }
 
 // Empty returns the result of in.Content.Empty method.
