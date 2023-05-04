@@ -82,8 +82,10 @@ func (mw *qwiklabsMdWriter) space() {
 func (mw *qwiklabsMdWriter) newBlock() {
 	if !mw.lineStart {
 		mw.writeString("\n")
+		mw.writeString("\n")
 	}
-	mw.writeString("\n")
+  // Todo: Remove line breaks in Text block 
+	// mw.writeString("\n")
 }
 
 func (mw *qwiklabsMdWriter) matchEnv(v []string) bool {
@@ -110,9 +112,10 @@ func (mw *qwiklabsMdWriter) write(nodesToWrite ...nodes.Node) error {
 			mw.write(n.Content.Nodes...)
 		case *nodes.CodeNode:
 			mw.code(n)
-		case *nodes.ListNode:
-			mw.list(n)
 		case *nodes.ImportNode:
+			if len(n.Content.Nodes) == 0 {
+				break
+			}
 			mw.importElem(n)
 		case *nodes.ItemsListNode:
 			mw.itemsList(n)
@@ -157,6 +160,14 @@ func (mw *qwiklabsMdWriter) text(n *nodes.TextNode) {
 
 	mw.writeString(t)
 
+  if strings.Contains(t, "</ql-hint>"){
+	  mw.writeString("\n\n")
+  }
+
+  if strings.Contains(t, "</ql-multiple-choice-probe>"){
+	  mw.writeString("\n\n")
+  }
+
 	if n.Code {
 		mw.writeString("`")
 	}
@@ -164,7 +175,8 @@ func (mw *qwiklabsMdWriter) text(n *nodes.TextNode) {
 		mw.writeString("*")
 	}
 	if n.Bold {
-		mw.writeString("**")
+		// mw.writeString("**")
+		mw.writeString("</strong>")
 	}
 
 	mw.writeString(right)
@@ -191,10 +203,12 @@ func (mw *qwiklabsMdWriter) image(n *nodes.ImageNode) {
 	}
 
 	mw.writeString("/>")
+	mw.writeString("\n")
+	mw.writeString("\n")
 }
 
 func (mw *qwiklabsMdWriter) url(n *nodes.URLNode) {
-	mw.space()
+//	mw.space()
 	if n.URL != "" {
 		// Look-ahead for button syntax.
 		if _, ok := n.Content.Nodes[0].(*nodes.ButtonNode); ok {
@@ -223,29 +237,29 @@ func (mw *qwiklabsMdWriter) code(n *nodes.CodeNode) {
 	}
 	mw.newBlock()
 	defer mw.writeString("\n")
-	mw.writeString("```")
+  // TODO: Remove the use of code ticks
+	// mw.writeString("```")
 	if n.Term {
-		//mw.writeString("console")
-		mw.writeString("bash noWrap")
+    // TODO: Replace code ticks with ql-code-block 
+    // Default to use bash noWrap
+		// mw.writeString("bash noWrap")
+	  mw.writeString("\n")
+	  mw.writeString("<ql-code-block bash templated noWrap>")
+		// mw.writeString("console")
 	} else {
 		mw.writeString(n.Lang)
 	}
 	mw.writeString("\n")
 	mw.writeString(n.Value)
+  
 	if !mw.lineStart {
 		mw.writeString("\n")
 	}
-	mw.writeString("```")
-}
 
-func (mw *qwiklabsMdWriter) list(n *nodes.ListNode) {
-	if n.Block() == true {
-		mw.newBlock()
-	}
-	mw.write(n.Nodes...)
-	if !mw.lineStart && !mw.isWritingTableCell {
-		mw.writeString("\n")
-	}
+  // TODO: Close the code block 
+	// mw.writeString("```")
+	mw.writeString("</ql-code-block>")
+	mw.writeString("\n")
 }
 
 func (mw *qwiklabsMdWriter) itemsList(n *nodes.ItemsListNode) {
@@ -264,6 +278,7 @@ func (mw *qwiklabsMdWriter) itemsList(n *nodes.ItemsListNode) {
 			mw.writeString("\n")
 		}
 	}
+  mw.writeString("\n")
 	mw.isWritingList = false
 }
 
@@ -273,8 +288,11 @@ func (mw *qwiklabsMdWriter) infobox(n *nodes.InfoboxNode) {
 	// which breaks the formatting. So instead, write the ListNode's children
 	// directly and don't write the ListNode itself.
 	mw.newBlock()
+  // TODO: Replace aside with infobox/warningbox
+	// k := "aside positive"
 	k := "<ql-infobox>"
 	if n.Kind == nodes.InfoboxNegative {
+		// k = "aside negative"
 		k = "<ql-warningbox>"
 	}
 	mw.Prefix = []byte("")
@@ -285,13 +303,19 @@ func (mw *qwiklabsMdWriter) infobox(n *nodes.InfoboxNode) {
 		mw.write(cn)
 	}
 
+  // TODO: Close 
+	mw.Prefix = []byte("")
+
+  // TODO: Cloud the info/warningbox
+	// k := "aside positive"
 	k = "</ql-infobox>"
 	if n.Kind == nodes.InfoboxNegative {
+		// k = "aside negative"
 		k = "</ql-warningbox>"
 	}
-
 	mw.Prefix = []byte("")
 	mw.writeString(k)
+	mw.writeString("\n")
 }
 
 func (mw *qwiklabsMdWriter) survey(n *nodes.SurveyNode) {
@@ -327,7 +351,14 @@ func (mw *qwiklabsMdWriter) youtube(n *nodes.YouTubeNode) {
 	if !mw.isWritingList {
 		mw.newBlock()
 	}
-	mw.writeString(fmt.Sprintf(`<video id="%s"></video>`, n.VideoID))
+
+  // TODO: Video should be on a new Block
+	mw.newBlock()	
+
+	mw.writeString("\n")
+  // TODO: Replace video control with ql-video element
+	// mw.writeString(fmt.Sprintf(`<video id="%s"></video>`, n.VideoID))
+	mw.writeString(fmt.Sprintf(`<ql-video youtubeId="%s"></ql-video>`, n.VideoID))
 }
 
 func (mw *qwiklabsMdWriter) table(n *nodes.GridNode) {
