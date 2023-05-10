@@ -116,6 +116,7 @@ func (mw *qwiklabsMdWriter) write(nodesToWrite ...nodes.Node) error {
 			if len(n.Content.Nodes) == 0 {
 				break
 			}
+      mw.writeString("Adding QL import")
 			mw.importElem(n)
 		case *nodes.ItemsListNode:
 			mw.itemsList(n)
@@ -416,12 +417,11 @@ func (mw *qwiklabsMdWriter) importElem(n *nodes.ImportNode) {
 	if title == "" {
 		title = n.URL
 	}
-
 	mw.newBlock()
 	mw.writeString("[[import ")
 	mw.writeString(title)
 	mw.writeString("]]")
-	mw.writeString("\n")
+	mw.writeString("\n\n")
 }
 
 // func maxColsInTable(n *nodes.GridNode) int {

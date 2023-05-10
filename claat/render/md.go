@@ -118,6 +118,7 @@ func (mw *mdWriter) write(nodesToWrite ...nodes.Node) error {
 				break
 			}
 			mw.write(n.Content.Nodes...)
+      // IMPORTS are handled as TEXT
 	    mw.writeString("\n")
 		case *nodes.ItemsListNode:
 			mw.itemsList(n)
@@ -145,15 +146,25 @@ func (mw *mdWriter) text(n *nodes.TextNode) {
 	t := strings.TrimRight(tr, " \t\n\r\f\v")
 	right := tr[len(t):len(tr)]
 
+
+  // TODO: Add line break before IMPORT
+  if strings.Contains(t, "[["){
+//	  mw.writeString("\n\n")
+//	  mw.writeString("IMPORT statement")
+	  mw.writeString("\n\n")
+  }
+
   // TODO: Ensure break added for watermark
   var isEndWatermark bool
 
   // TODO: Ensure break added for watermark
   if strings.Contains(t, "Last Updated"){
+	  mw.writeString("\n\n")
     isEndWatermark = true;
   }
 
   if strings.Contains(t, "Last Tested"){
+	  mw.writeString("\n\n")
     isEndWatermark = true;
   }
 
@@ -187,6 +198,13 @@ func (mw *mdWriter) text(n *nodes.TextNode) {
   }
 
   if strings.Contains(t, "</ql-multiple-choice-probe>"){
+	  mw.writeString("\n\n")
+  }
+
+  // TODO: Add line break after IMPORT
+  if strings.Contains(t, "]]"){
+//	  mw.writeString("\n\n")
+//	  mw.writeString("IMPORT statement")
 	  mw.writeString("\n\n")
   }
 
