@@ -421,6 +421,7 @@ func (mw *qwiklabsMdWriter) importElem(n *nodes.ImportNode) {
 	mw.writeString("[[import ")
 	mw.writeString(title)
 	mw.writeString("]]")
+	mw.writeString("\n")
 }
 
 // func maxColsInTable(n *nodes.GridNode) int {

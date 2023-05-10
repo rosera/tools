@@ -118,6 +118,7 @@ func (mw *mdWriter) write(nodesToWrite ...nodes.Node) error {
 				break
 			}
 			mw.write(n.Content.Nodes...)
+	    mw.writeString("\n")
 		case *nodes.ItemsListNode:
 			mw.itemsList(n)
 		case *nodes.GridNode:
