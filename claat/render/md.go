@@ -141,8 +141,8 @@ func (mw *mdWriter) write(nodesToWrite ...nodes.Node) error {
 }
 
 func (mw *mdWriter) text(n *nodes.TextNode) {
-	// tr := strings.TrimLeft(n.Value, " \t\n\r\f\v")
-	tr := strings.TrimLeft(n.Value, " \t\r\f\v")
+	tr := strings.TrimLeft(n.Value, " \t\n\r\f\v")
+	// tr := strings.TrimLeft(n.Value, " \t\r\f\v")
 	left := n.Value[0:(len(n.Value) - len(tr))]
 	// t := strings.TrimRight(tr, " \t\n\r\f\v")
 	t := strings.TrimRight(tr, " \t\r\f\v")
