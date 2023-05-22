@@ -16,6 +16,7 @@ package cmd
 
 import (
 	"log"
+	"strings"
 	"net/http"
 	"os/exec"
 	"runtime"
@@ -40,14 +41,27 @@ func CmdServe(addr string, serveDir string) int {
 	  log.Printf("Serving codelabs on %s", addr)
 		ch <- http.ListenAndServe(addr, nil)
 	}()
+
   // rosera: Serve from a directory rather than root 
-	openBrowser("http://" + addr + "/" + serveDir)
+  if ContainsHttp(serveDir) {
+    log.Println("The URL includes 'http'")
+	  openBrowser(serveDir)
+  } else {
+    log.Println("The URL does not include 'http'")
+	  openBrowser("http://" + addr + "/" + serveDir)
+  }
+  // rosera: Serve from a directory rather than root 
+	// openBrowser("http://" + addr + "/" + serveDir)
 
   // rosera: Serve from a storage bucket
   //openBrowser("https://storage.googleapis.com/qwiklabs-lab-architect-rosera/labs/index.html")
   //openBrowser("https://drive.google.com/drive/folders/1PU64mu1Yvm023OKefdiEX4Jl5H6V15fp?usp=sharing")
 	log.Fatalf("claat serve: %v", <-ch)
 	return 0
+}
+
+func ContainsHttp(url string) bool {
+  return strings.HasPrefix(url, "http://") || strings.HasPrefix(url, "https://")
 }
 
 // openBrowser tries to open the URL in a browser.

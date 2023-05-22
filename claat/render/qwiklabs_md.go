@@ -139,9 +139,12 @@ func (mw *qwiklabsMdWriter) write(nodesToWrite ...nodes.Node) error {
 }
 
 func (mw *qwiklabsMdWriter) text(n *nodes.TextNode) {
-	tr := strings.TrimLeft(n.Value, " \t\n\r\f\v")
+
+	// tr := strings.TrimLeft(n.Value, " \t\n\r\f\v")
+	tr := strings.TrimLeft(n.Value, " \t\r\f\v")
 	left := n.Value[0:(len(n.Value) - len(tr))]
-	t := strings.TrimRight(tr, " \t\n\r\f\v")
+	// t := strings.TrimRight(tr, " \t\n\r\f\v")
+	t := strings.TrimRight(tr, " \t\r\f\v")
 	right := tr[len(t):len(tr)]
 
 	mw.writeString(left)
@@ -156,6 +159,7 @@ func (mw *qwiklabsMdWriter) text(n *nodes.TextNode) {
 		mw.writeString("`")
 	}
 
+//  t = strings.Replace(t, "\n", "</br></br>", -1)
 	t = strings.Replace(t, "<", "&lt;", -1)
 	t = strings.Replace(t, ">", "&gt;", -1)
 
