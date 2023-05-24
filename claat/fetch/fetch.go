@@ -222,10 +222,14 @@ func (f *Fetcher) SlurpImages(src, dir string, n []nodes.Node, images map[string
 	var count int
 	imageNodes := nodes.ImageNodes(n)
 	count += len(imageNodes)
+
+  fmt.Printf("imageNode len: %d\n", count)
 	for _, imageNode := range imageNodes {
 		go func(imageNode *nodes.ImageNode) {
 			url := imageNode.Src
 			file, err := f.slurpBytes(src, dir, url)
+      fmt.Printf("File: %s\n", file)
+      fmt.Printf("Error: %v\n", err)
 			if err == nil {
 				imageNode.Src = filepath.Join(util.ImgDirname, file)
 			}
@@ -237,6 +241,9 @@ func (f *Fetcher) SlurpImages(src, dir string, n []nodes.Node, images map[string
 		r := <-ch
 		images[r.file] = r.url
 		if r.err != nil {
+//      fmt.Printf("File: %s\n", r.file)
+//      fmt.Printf("Url:  %s\n", r.url)
+      fmt.Println("------")
 			errStr += fmt.Sprintf("%s => %s: %v\n", r.url, r.file, r.err)
 		}
 	}
@@ -252,8 +259,11 @@ func (f *Fetcher) slurpBytes(codelabSrc, dir, imgURL string) (string, error) {
 	// Only proceed a simple copy on local reference.
 	var b []byte
 	var ext string
+
+  fmt.Printf("slurpBytes\n")
 	u, err := url.Parse(imgURL)
 	if err != nil {
+    fmt.Printf("Error url.Parse imgURL\n")
 		return "", err
 	}
 
@@ -261,17 +271,28 @@ func (f *Fetcher) slurpBytes(codelabSrc, dir, imgURL string) (string, error) {
 	// the image URL in the same way.
 	srcUrl, err := url.Parse(codelabSrc)
 	if err == nil && srcUrl.Host != "" {
+    fmt.Printf("Error url.Parse codelabSrc\n")
 		u = srcUrl.ResolveReference(u)
 	}
 
 	if u.Host == "" {
+    fmt.Printf("u.Host is empty\n")
 		if imgURL, err = restrictPathToParent(imgURL, filepath.Dir(codelabSrc)); err != nil {
+      fmt.Printf("imgURL %s\n", imgURL)
+      fmt.Printf("Error %v\n", err)
 			return "", err
 		}
+    
+    fmt.Printf("imgURL %s\n", imgURL)
 		b, err = ioutil.ReadFile(imgURL)
+
+    fmt.Printf("Bytes %s\n", b)
+    fmt.Printf("Error %v\n", err)
+
 		ext = filepath.Ext(imgURL)
 	} else {
 		b, err = f.slurpRemoteBytes(u.String(), 5)
+//     fmt.Printf("Test String: %s\n", string(b[6:10]))
 		if string(b[6:10]) == "JFIF" {
 			ext = ".jpeg"
 		} else if string(b[0:3]) == "GIF" {
@@ -280,10 +301,12 @@ func (f *Fetcher) slurpBytes(codelabSrc, dir, imgURL string) (string, error) {
 			ext = ".png"
 		}
 	}
+
 	if err != nil {
 		return "", err
 	}
 
+  fmt.Printf("Perform checksum\n")
 	crc := crc64.Checksum(b, f.crcTable)
 	file := fmt.Sprintf("%x%s", crc, ext)
 	dst := filepath.Join(dir, file)
