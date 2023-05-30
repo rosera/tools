@@ -81,7 +81,7 @@ var funcMap = map[string]interface{}{
 	"renderHTML":         HTML,
 	"renderMD":           MD,
 	"renderQwiklabsMD":   QwiklabsMD,
-	"renderQwiklabsHTML": QwiklabsHTML,
+//	"renderQwiklabsHTML": QwiklabsHTML,
 	"durationStr": func(d time.Duration) string {
 		m := d / time.Minute
 		return fmt.Sprintf("%02d:00", m)
