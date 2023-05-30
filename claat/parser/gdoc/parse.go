@@ -16,6 +16,7 @@ package gdoc
 
 import (
 	"bytes"
+	"encoding/base64"
 	"fmt"
 	"io"
 	"net/url"
@@ -296,7 +297,16 @@ func transformNodes(name string, nodesToTransform []nodes.Node) nodes.Node {
 		if !ok {
 			return nil
 		}
-		return nodes.NewImportNode(u.URL)
+
+		title := ""
+		for _, n := range u.Content.Nodes {
+			switch n := n.(type) {
+			case *nodes.TextNode:
+				title = title + n.Value
+			}
+		}
+
+		return nodes.NewImportNode(u.URL, title)
 	}
 	return nil
 }
@@ -686,7 +696,7 @@ func image(ds *docState) nodes.Node {
 		// For iframe, make sure URL ends in allowlisted domain.
 		ok := false
 		for _, domain := range nodes.IframeAllowlist {
-			if strings.HasSuffix(u.Hostname(), domain) {
+			if u.Hostname() == domain {
 				ok = true
 				break
 			}
@@ -697,12 +707,32 @@ func image(ds *docState) nodes.Node {
 		errorAlt = "The domain of the requested iframe (" + u.Hostname() + ") has not been whitelisted."
 		fmt.Fprint(os.Stderr, errorAlt+"\n")
 	}
+
+	var imageBytes []byte
+	var imageSrc string
 	s := nodeAttr(ds.cur, "src")
 	if s == "" {
 		return nil
+	} else if strings.HasPrefix(s, "data:") {
+		_, data, ok := strings.Cut(s, ",")
+		if !ok {
+			fmt.Fprint(os.Stderr, "Failed to decode data URL: "+s+" \n")
+			return nil
+		}
+		b, err := base64.StdEncoding.DecodeString(data)
+		if err != nil {
+			fmt.Fprint(os.Stderr, "Failed to decode data URL: "+s+"\n"+err.Error()+"\n")
+			return nil
+		}
+		imageSrc = ""
+		imageBytes = b
+	} else {
+		imageSrc = s
+		imageBytes = []byte{}
 	}
 	n := nodes.NewImageNode(nodes.NewImageNodeOptions{
-		Src:   s,
+		Src:   imageSrc,
+		Bytes: imageBytes,
 		Width: styleFloatValue(ds.cur, "width"),
 	})
 	n.MutateBlock(findBlockParent(ds.cur))

@@ -29,7 +29,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/googlecodelabs/tools/claat/cmd"
+	"github.com/rosera/tools/claat/cmd"
 
 	// allow parsers to register themselves
 	_ "github.com/googlecodelabs/tools/claat/parser/gdoc"
