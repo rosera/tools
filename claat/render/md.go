@@ -83,8 +83,11 @@ func (mw *mdWriter) newBlock() {
 		mw.writeString("\n")
 		mw.writeString("\n")
 	}
-  // Todo: Remove line breaks in Text block 
-//	mw.writeString("\n")
+
+  // Todo: Add line breaks in Text block 
+  if mw.text != nil {
+    mw.writeString("\n")
+  }
 }
 
 func (mw *mdWriter) matchEnv(v []string) bool {
@@ -141,8 +144,8 @@ func (mw *mdWriter) write(nodesToWrite ...nodes.Node) error {
 }
 
 func (mw *mdWriter) text(n *nodes.TextNode) {
-	tr := strings.TrimLeft(n.Value, " \t\n\r\f\v")
-	// tr := strings.TrimLeft(n.Value, " \t\r\f\v")
+	// tr := strings.TrimLeft(n.Value, " \t\n\r\f\v")
+	tr := strings.TrimLeft(n.Value, " \t\r\f\v")
 	left := n.Value[0:(len(n.Value) - len(tr))]
 	// t := strings.TrimRight(tr, " \t\n\r\f\v")
 	t := strings.TrimRight(tr, " \t\r\f\v")
@@ -169,6 +172,11 @@ func (mw *mdWriter) text(n *nodes.TextNode) {
 	  mw.writeString("\n\n")
     isEndWatermark = true;
   }
+
+//   // TODO: Add a line break for paragraph
+//   if strings.Contains(t, "\n"){
+// 	  mw.writeString("\n\n")
+//   }
 
   // TODO: Automate Date update for String t
 
@@ -369,6 +377,7 @@ func (mw *mdWriter) infobox(n *nodes.InfoboxNode) {
 	mw.writeString(k)
 	mw.writeString("\n")
 
+//	t = strings.Replace(t, "<", "&lt;", -1)
 	for _, cn := range n.Content.Nodes {
 		mw.write(cn)
 	}
