@@ -85,9 +85,16 @@ func (mw *mdWriter) newBlock() {
 	}
 
   // Todo: Add line breaks in Text block 
-  if mw.text != nil {
-    mw.writeString("\n")
-  }
+//  if mw.text != nil {
+//    n := mw.TextNode
+//    tr := strings.TrimLeft(n.Value, "\t\n\r\f\v")
+//
+//    if strings.Contains(tr, "</ql-multiple-choice-probe>"){
+//	    mw.writeString("\n")
+//    } else {
+//	    mw.writeString("\n\n")
+//    }
+//  }
 }
 
 func (mw *mdWriter) matchEnv(v []string) bool {
@@ -151,6 +158,9 @@ func (mw *mdWriter) text(n *nodes.TextNode) {
 	t := strings.TrimRight(tr, " \t\r\f\v")
 	right := tr[len(t):len(tr)]
 
+  if strings.Contains(t, "\n\n"){
+	  mw.writeString("\n\n")
+  }
 
   // TODO: Add line break before IMPORT
   if strings.Contains(t, "[["){
@@ -173,10 +183,10 @@ func (mw *mdWriter) text(n *nodes.TextNode) {
     isEndWatermark = true;
   }
 
-//   // TODO: Add a line break for paragraph
-//   if strings.Contains(t, "\n"){
-// 	  mw.writeString("\n\n")
-//   }
+   // TODO: Add a line break for paragraph
+   if strings.Contains(t, "\n"){
+ 	  mw.writeString("\n\n")
+   }
 
   // TODO: Automate Date update for String t
 
@@ -208,7 +218,8 @@ func (mw *mdWriter) text(n *nodes.TextNode) {
   }
 
   if strings.Contains(t, "</ql-multiple-choice-probe>"){
-	  mw.writeString("\n\n")
+	  // mw.writeString("\n\n")
+	  mw.writeString("\n")
   }
 
   // TODO: Add line break after IMPORT
@@ -343,7 +354,12 @@ func (mw *mdWriter) itemsList(n *nodes.ItemsListNode) {
 	if n.Block() == true {
 		mw.newBlock()
 	}
+
+  // TODO: Add line break before list
+  mw.writeString("\n")
+
   // TODO: Replace with HTML Unordered List
+
 	for i, item := range n.Items {
 		s := "* "
 		if n.Type() == nodes.NodeItemsList && n.Start > 0 {
