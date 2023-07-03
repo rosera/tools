@@ -85,7 +85,8 @@ func (mw *mdWriter) newBlock() {
 	}
 
   // Todo: Add line breaks in Text block 
-//  if mw.text != nil {
+  if mw.text != nil {
+	   mw.writeString("\n")
 //    n := mw.TextNode
 //    tr := strings.TrimLeft(n.Value, "\t\n\r\f\v")
 //
@@ -94,7 +95,7 @@ func (mw *mdWriter) newBlock() {
 //    } else {
 //	    mw.writeString("\n\n")
 //    }
-//  }
+  }
 }
 
 func (mw *mdWriter) matchEnv(v []string) bool {
@@ -309,23 +310,40 @@ func (mw *mdWriter) url(n *nodes.URLNode) {
 }
 
 func (mw *mdWriter) code(n *nodes.CodeNode) {
+  // Allow user defined code block
+  writeCodeBlock := true 
+
 	if n.Empty() {
 		return
 	}
 	mw.newBlock()
 	defer mw.writeString("\n")
-  // TODO: Remove the use of code ticks
-	// mw.writeString("```")
+
 	if n.Term {
-    // TODO: Replace code ticks with ql-code-block 
-    // Default to use bash noWrap
-		// mw.writeString("bash noWrap")
-	  mw.writeString("\n")
-	  mw.writeString("<ql-code-block bash templated noWrap>")
-		// mw.writeString("console")
+    // User defined: Handle code ticks 
+    if strings.Contains(n.Value, "```"){
+      // Code block defined
+      writeCodeBlock = false 
+    } 
+
+    // User defined: Handle ql-code-block 
+    if strings.Contains(n.Value, "ql-code-block") {
+      // Code block defined
+      writeCodeBlock = false 
+    } 
+
+    // Default: Handle code block 
+    if  writeCodeBlock {
+      // Code block default
+      writeCodeBlock = true 
+
+	    mw.writeString("\n")
+	    mw.writeString("<ql-code-block bash templated noWrap>")
+    }
 	} else {
 		mw.writeString(n.Lang)
 	}
+
 	mw.writeString("\n")
 	mw.writeString(n.Value)
   
@@ -333,9 +351,10 @@ func (mw *mdWriter) code(n *nodes.CodeNode) {
 		mw.writeString("\n")
 	}
 
-  // TODO: Close the code block 
-	// mw.writeString("```")
-	mw.writeString("</ql-code-block>")
+  // TODO: Write the closing code block 
+  if (writeCodeBlock) {
+	  mw.writeString("</ql-code-block>")
+  }
 	mw.writeString("\n")
 }
 
