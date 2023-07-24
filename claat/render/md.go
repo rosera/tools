@@ -128,6 +128,7 @@ func (mw *mdWriter) write(nodesToWrite ...nodes.Node) error {
 			if len(n.Content.Nodes) == 0 {
 				break
 			}
+	    mw.writeString("[[ IMPORT ]]\n")
 			mw.write(n.Content.Nodes...)
       // IMPORTS are handled as TEXT
 	    mw.writeString("\n")
