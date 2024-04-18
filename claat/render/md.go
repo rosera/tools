@@ -320,6 +320,7 @@ func (mw *mdWriter) code(n *nodes.CodeNode) {
 	mw.newBlock()
 	defer mw.writeString("\n")
 
+  // Handle: Terminal
 	if n.Term {
     // User defined: Handle code ticks 
     if strings.Contains(n.Value, "```"){
@@ -339,9 +340,11 @@ func (mw *mdWriter) code(n *nodes.CodeNode) {
       writeCodeBlock = true 
 
 	    mw.writeString("\n")
-	    mw.writeString("<ql-code-block bash templated noWrap>")
+	    mw.writeString("<ql-code-block output templated noWrap>")
     }
 	} else {
+    // Handle Code Snippet
+	  mw.writeString("<ql-code-block bash templated noWrap>")
 		mw.writeString(n.Lang)
 	}
 
