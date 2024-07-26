@@ -86,7 +86,15 @@ func (mw *mdWriter) newBlock() {
 
   // Todo: Add line breaks in Text block 
   if mw.text != nil {
-    mw.writeString("\n")
+	   mw.writeString("\n")
+//    n := mw.TextNode
+//    tr := strings.TrimLeft(n.Value, "\t\n\r\f\v")
+//
+//    if strings.Contains(tr, "</ql-multiple-choice-probe>"){
+//	    mw.writeString("\n")
+//    } else {
+//	    mw.writeString("\n\n")
+//    }
   }
 }
 
@@ -120,6 +128,7 @@ func (mw *mdWriter) write(nodesToWrite ...nodes.Node) error {
 			if len(n.Content.Nodes) == 0 {
 				break
 			}
+	    mw.writeString("[[ IMPORT ]]\n")
 			mw.write(n.Content.Nodes...)
       // IMPORTS are handled as TEXT
 	    mw.writeString("\n")
@@ -151,6 +160,9 @@ func (mw *mdWriter) text(n *nodes.TextNode) {
 	t := strings.TrimRight(tr, " \t\r\f\v")
 	right := tr[len(t):len(tr)]
 
+  if strings.Contains(t, "\n\n"){
+	  mw.writeString("\n\n")
+  }
 
   // TODO: Add line break before IMPORT
   if strings.Contains(t, "[["){
@@ -173,10 +185,10 @@ func (mw *mdWriter) text(n *nodes.TextNode) {
     isEndWatermark = true;
   }
 
-//   // TODO: Add a line break for paragraph
-//   if strings.Contains(t, "\n"){
-// 	  mw.writeString("\n\n")
-//   }
+   // TODO: Add a line break for paragraph
+   if strings.Contains(t, "\n"){
+ 	  mw.writeString("\n\n")
+   }
 
   // TODO: Automate Date update for String t
 
@@ -208,7 +220,8 @@ func (mw *mdWriter) text(n *nodes.TextNode) {
   }
 
   if strings.Contains(t, "</ql-multiple-choice-probe>"){
-	  mw.writeString("\n\n")
+	  // mw.writeString("\n\n")
+	  mw.writeString("\n")
   }
 
   // TODO: Add line break after IMPORT
@@ -298,23 +311,43 @@ func (mw *mdWriter) url(n *nodes.URLNode) {
 }
 
 func (mw *mdWriter) code(n *nodes.CodeNode) {
+  // Allow user defined code block
+  writeCodeBlock := true 
+
 	if n.Empty() {
 		return
 	}
 	mw.newBlock()
 	defer mw.writeString("\n")
-  // TODO: Remove the use of code ticks
-	// mw.writeString("```")
+
+  // Handle: Terminal
 	if n.Term {
-    // TODO: Replace code ticks with ql-code-block 
-    // Default to use bash noWrap
-		// mw.writeString("bash noWrap")
-	  mw.writeString("\n")
-	  mw.writeString("<ql-code-block bash templated noWrap>")
-		// mw.writeString("console")
+    // User defined: Handle code ticks 
+    if strings.Contains(n.Value, "```"){
+      // Code block defined
+      writeCodeBlock = false 
+    } 
+
+    // User defined: Handle ql-code-block 
+    if strings.Contains(n.Value, "ql-code-block") {
+      // Code block defined
+      writeCodeBlock = false 
+    } 
+
+    // Default: Handle code block 
+    if  writeCodeBlock {
+      // Code block default
+      writeCodeBlock = true 
+
+	    mw.writeString("\n")
+	    mw.writeString("<ql-code-block output templated noWrap>")
+    }
 	} else {
+    // Handle Code Snippet
+	  mw.writeString("<ql-code-block bash templated noWrap>")
 		mw.writeString(n.Lang)
 	}
+
 	mw.writeString("\n")
 	mw.writeString(n.Value)
   
@@ -322,9 +355,10 @@ func (mw *mdWriter) code(n *nodes.CodeNode) {
 		mw.writeString("\n")
 	}
 
-  // TODO: Close the code block 
-	// mw.writeString("```")
-	mw.writeString("</ql-code-block>")
+  // TODO: Write the closing code block 
+  if (writeCodeBlock) {
+	  mw.writeString("</ql-code-block>")
+  }
 	mw.writeString("\n")
 }
 
@@ -343,7 +377,12 @@ func (mw *mdWriter) itemsList(n *nodes.ItemsListNode) {
 	if n.Block() == true {
 		mw.newBlock()
 	}
+
+  // TODO: Add line break before list
+  mw.writeString("\n")
+
   // TODO: Replace with HTML Unordered List
+
 	for i, item := range n.Items {
 		s := "* "
 		if n.Type() == nodes.NodeItemsList && n.Start > 0 {
