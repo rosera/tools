@@ -36,3 +36,12 @@ Don't forget to run `make lint` or `golint ./...` before creating a new CL.
 
 To create cross-compiled versions for all supported OS/Arch, run `make release`.
 It will place the output in `bin/claat-<os>-<arch>`.
+
+
+## LOCAL CLAAT
+
+Use the QWIKLABS formatting and output to the labs 
+
+```
+./claat export -o labs -e qwiklabs-md -f md 1ylTY3uIXZQ3lWsCzIVlFIwAgKuaG6BpIF3AsiaQooGA
+```
