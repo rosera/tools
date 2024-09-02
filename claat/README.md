@@ -6,6 +6,20 @@ It then converts the input into a codelab format, HTML by default.
 
 For more info run `claat help`.
 
+
+## Qwiklabs
+
+| action | description |
+|--------|-------------|
+| -o     | Output to folder |
+| -e     | Export type |
+| -f     | Format to apply |
+
+
+```
+./claat export -o labs -e qwiklabs.md -f md [GDOC_ID]
+```
+
 ## Install
 
 The easiest way is to download pre-compiled binary.
