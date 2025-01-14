@@ -16,8 +16,15 @@ For more info run `claat help`.
 | -f     | Format to apply |
 
 
+
+Perform an export for a Google Doc to Markdown using Qwiklabs Formatting
 ```
 ./claat export -o labs -e qwiklabs.md -f md [GDOC_ID]
+```
+
+Perform an export using a user authentication token
+```
+./claat export -auth [TOKEN] -o labs -e qwiklabs.md -f md [GDOC_ID]
 ```
 
 
