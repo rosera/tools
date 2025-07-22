@@ -23,6 +23,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+
 	"github.com/googlecodelabs/tools/claat/nodes"
 )
 
@@ -81,21 +82,8 @@ func (mw *mdWriter) space() {
 func (mw *mdWriter) newBlock() {
 	if !mw.lineStart {
 		mw.writeString("\n")
-		mw.writeString("\n")
 	}
-
-  // Todo: Add line breaks in Text block 
-  if mw.text != nil {
-	   mw.writeString("\n")
-//    n := mw.TextNode
-//    tr := strings.TrimLeft(n.Value, "\t\n\r\f\v")
-//
-//    if strings.Contains(tr, "</ql-multiple-choice-probe>"){
-//	    mw.writeString("\n")
-//    } else {
-//	    mw.writeString("\n\n")
-//    }
-  }
+	mw.writeString("\n")
 }
 
 func (mw *mdWriter) matchEnv(v []string) bool {
@@ -128,10 +116,7 @@ func (mw *mdWriter) write(nodesToWrite ...nodes.Node) error {
 			if len(n.Content.Nodes) == 0 {
 				break
 			}
-	    mw.writeString("[[ IMPORT ]]\n")
 			mw.write(n.Content.Nodes...)
-      // IMPORTS are handled as TEXT
-	    mw.writeString("\n")
 		case *nodes.ItemsListNode:
 			mw.itemsList(n)
 		case *nodes.GridNode:
@@ -153,112 +138,39 @@ func (mw *mdWriter) write(nodesToWrite ...nodes.Node) error {
 }
 
 func (mw *mdWriter) text(n *nodes.TextNode) {
-	// tr := strings.TrimLeft(n.Value, " \t\n\r\f\v")
-	tr := strings.TrimLeft(n.Value, " \t\r\f\v")
+	tr := strings.TrimLeft(n.Value, " \t\n\r\f\v")
 	left := n.Value[0:(len(n.Value) - len(tr))]
-	// t := strings.TrimRight(tr, " \t\n\r\f\v")
-	t := strings.TrimRight(tr, " \t\r\f\v")
+	t := strings.TrimRight(tr, " \t\n\r\f\v")
 	right := tr[len(t):len(tr)]
-
-  if strings.Contains(t, "\n\n"){
-	  mw.writeString("\n\n")
-  }
-
-  // TODO: Add line break before IMPORT
-  if strings.Contains(t, "[["){
-//	  mw.writeString("\n\n")
-//	  mw.writeString("IMPORT statement")
-	  mw.writeString("\n\n")
-  }
-
-  // TODO: Ensure break added for watermark
-  var isEndWatermark bool
-
-  // TODO: Ensure break added for watermark
-  if strings.Contains(t, "Last Updated"){
-	  mw.writeString("\n\n")
-    isEndWatermark = true;
-  }
-
-  if strings.Contains(t, "Last Tested"){
-	  mw.writeString("\n\n")
-    isEndWatermark = true;
-  }
-
-   // TODO: Add a line break for paragraph
-   if strings.Contains(t, "\n"){
- 	  mw.writeString("\n\n")
-   }
-
-  // TODO: Automate Date update for String t
-
 
 	mw.writeString(left)
 
-  // TODO: Replace with HTML Code
 	if n.Bold {
-		//mw.writeString("**")
-		mw.writeString("<strong>")
+		mw.writeString("**")
 	}
-  
 	if n.Italic {
 		mw.writeString("*")
 	}
-
 	if n.Code {
 		mw.writeString("`")
 	}
 
-  // TODO: Enable ql-* custom block to be used in GDoc
-//	t = strings.Replace(t, "<", "&lt;", -1)
-//	t = strings.Replace(t, ">", "&gt;", -1)
+	t = strings.Replace(t, "<", "&lt;", -1)
+	t = strings.Replace(t, ">", "&gt;", -1)
 
-  mw.writeString(t)
+	mw.writeString(t)
 
-  if strings.Contains(t, "</ql-hint>"){
-	  mw.writeString("\n\n")
-  }
-
-  if strings.Contains(t, "</ql-multiple-choice-probe>"){
-	  // mw.writeString("\n\n")
-	  mw.writeString("\n")
-  }
-
-  // TODO: Add line break after IMPORT
-  if strings.Contains(t, "]]"){
-//	  mw.writeString("\n\n")
-//	  mw.writeString("IMPORT statement")
-	  mw.writeString("\n\n")
-  }
-
-  // TODO: Ensure break added for watermark
-  // Ensure line break added for watermark
-  if isEndWatermark {
-	  mw.writeString("\n\n")
-  }
-  
-
-  // TODO: Replace HTML formatting with HTML Code
 	if n.Code {
 		mw.writeString("`")
 	}
-
 	if n.Italic {
 		mw.writeString("*")
 	}
-
 	if n.Bold {
-    // TODO: Amend so strong is rendered within the document
-    // Use strong as this can be rendered inside an Info/Warning box
-		//mw.writeString("**")
-		mw.writeString("</strong>")
+		mw.writeString("**")
 	}
 
 	mw.writeString(right)
-  // TODO: Not Codelab compatible
-//  if n.Bold {
-//	  mw.writeString("\n\n")
-//  }
 }
 
 func (mw *mdWriter) image(n *nodes.ImageNode) {
@@ -282,12 +194,10 @@ func (mw *mdWriter) image(n *nodes.ImageNode) {
 	}
 
 	mw.writeString("/>")
-	mw.writeString("\n")
-	mw.writeString("\n")
 }
 
 func (mw *mdWriter) url(n *nodes.URLNode) {
-//	mw.space()
+	mw.space()
 	if n.URL != "" {
 		// Look-ahead for button syntax.
 		if _, ok := n.Content.Nodes[0].(*nodes.ButtonNode); ok {
@@ -311,55 +221,23 @@ func (mw *mdWriter) url(n *nodes.URLNode) {
 }
 
 func (mw *mdWriter) code(n *nodes.CodeNode) {
-  // Allow user defined code block
-  writeCodeBlock := true 
-
 	if n.Empty() {
 		return
 	}
 	mw.newBlock()
 	defer mw.writeString("\n")
-
-  // Handle: Terminal
+	mw.writeString("```")
 	if n.Term {
-    // User defined: Handle code ticks 
-    if strings.Contains(n.Value, "```"){
-      // Code block defined
-      writeCodeBlock = false 
-    } 
-
-    // User defined: Handle ql-code-block 
-    if strings.Contains(n.Value, "ql-code-block") {
-      // Code block defined
-      writeCodeBlock = false 
-    } 
-
-    // Default: Handle code block 
-    if  writeCodeBlock {
-      // Code block default
-      writeCodeBlock = true 
-
-	    mw.writeString("\n")
-	    mw.writeString("<ql-code-block output templated noWrap>")
-    }
+		mw.writeString("console")
 	} else {
-    // Handle Code Snippet
-	  mw.writeString("<ql-code-block bash templated noWrap>")
 		mw.writeString(n.Lang)
 	}
-
 	mw.writeString("\n")
 	mw.writeString(n.Value)
-  
 	if !mw.lineStart {
 		mw.writeString("\n")
 	}
-
-  // TODO: Write the closing code block 
-  if (writeCodeBlock) {
-	  mw.writeString("</ql-code-block>")
-  }
-	mw.writeString("\n")
+	mw.writeString("```")
 }
 
 func (mw *mdWriter) list(n *nodes.ListNode) {
@@ -377,12 +255,6 @@ func (mw *mdWriter) itemsList(n *nodes.ItemsListNode) {
 	if n.Block() == true {
 		mw.newBlock()
 	}
-
-  // TODO: Add line break before list
-  mw.writeString("\n")
-
-  // TODO: Replace with HTML Unordered List
-
 	for i, item := range n.Items {
 		s := "* "
 		if n.Type() == nodes.NodeItemsList && n.Start > 0 {
@@ -394,8 +266,6 @@ func (mw *mdWriter) itemsList(n *nodes.ItemsListNode) {
 			mw.writeString("\n")
 		}
 	}
-  // TODO: Add list space
-  mw.writeString("\n")
 	mw.isWritingList = false
 }
 
@@ -405,35 +275,19 @@ func (mw *mdWriter) infobox(n *nodes.InfoboxNode) {
 	// which breaks the formatting. So instead, write the ListNode's children
 	// directly and don't write the ListNode itself.
 	mw.newBlock()
-  // TODO: Replace aside with infobox/warningbox
-	// k := "aside positive"
-	k := "<ql-infobox>"
+	k := "aside positive"
 	if n.Kind == nodes.InfoboxNegative {
-		// k = "aside negative"
-		k = "<ql-warningbox>"
+		k = "aside negative"
 	}
-	mw.Prefix = []byte("")
+	mw.Prefix = []byte("> ")
 	mw.writeString(k)
 	mw.writeString("\n")
 
-//	t = strings.Replace(t, "<", "&lt;", -1)
 	for _, cn := range n.Content.Nodes {
 		mw.write(cn)
 	}
 
-  // TODO: Close 
 	mw.Prefix = []byte("")
-
-  // TODO: Cloud the info/warningbox
-	// k := "aside positive"
-	k = "</ql-infobox>"
-	if n.Kind == nodes.InfoboxNegative {
-		// k = "aside negative"
-		k = "</ql-warningbox>"
-	}
-	mw.Prefix = []byte("")
-	mw.writeString(k)
-	mw.writeString("\n")
 }
 
 func (mw *mdWriter) survey(n *nodes.SurveyNode) {
@@ -469,14 +323,7 @@ func (mw *mdWriter) youtube(n *nodes.YouTubeNode) {
 	if !mw.isWritingList {
 		mw.newBlock()
 	}
-
-  // TODO: Video should be on a new Block
-	mw.newBlock()	
-
-	mw.writeString("\n")
-  // TODO: Replace video control with ql-video element
-	// mw.writeString(fmt.Sprintf(`<video id="%s"></video>`, n.VideoID))
-	mw.writeString(fmt.Sprintf(`<ql-video youtubeId="%s"></ql-video>`, n.VideoID))
+	mw.writeString(fmt.Sprintf(`<video id="%s"></video>`, n.VideoID))
 }
 
 func (mw *mdWriter) table(n *nodes.GridNode) {

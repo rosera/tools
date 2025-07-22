@@ -1,0 +1,90 @@
+steps:
+  # Step 1: Build for linux/amd64
+  - name: 'golang:1.24'
+    id: 'Build Linux AMD64 Binary'
+    env:
+      - GOOS=linux
+      - GOARCH=amd64
+      - CGO_ENABLED=0 # <-- Add this for static linking
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        # go mod tidy # Uncomment if you need to run this before building
+        go build -ldflags "-s -w -extldflags \"-static\"" -o ${_APP_NAME}-linux-${SHORT_SHA} # <-- Add ldflags here
+    dir: lab-factory
+
+#  # Step 2: Build for darwin/amd64
+#  - name: 'golang:1.24'
+#    id: 'Build Darwin AMD64 Binary'
+#    env:
+#      - GOOS=darwin
+#      - GOARCH=amd64
+#      - CGO_ENABLED=0 # <-- Add this for static linking (though macOS static linking can be tricky)
+#    entrypoint: bash
+#    args:
+#      - -c
+#      - |
+#        # go mod tidy
+#        # For macOS, truly static binaries are harder to achieve due to Apple's linker.
+#        # -extldflags "-static" might not always work as expected or might require specific C toolchains.
+#        # It's often sufficient to just use -ldflags "-s -w" for macOS unless specific C dependencies
+#        # are causing dynamic linking issues.
+#        go build -ldflags "-s -w" -o ${_APP_NAME}-darwin-${SHORT_SHA} # <-- Modified for macOS considerations
+#    dir: lab-factory
+
+#  # Step 3: Build for Windows/amd64
+#  - name: 'golang:1.24'
+#    id: 'Build Windows AMD64 Binary'
+#    env:
+#      - GOOS=windows
+#      - GOARCH=amd64
+#      - CGO_ENABLED=0 # <-- Add this for static linking
+#    entrypoint: bash
+#    args:
+#      - -c
+#      - |
+#        # go mod tidy
+#        # Go typically produces static executables for Windows by default for pure Go code.
+#        # -extldflags "-static" is often redundant here, but can be added for consistency
+#        # or if you have specific C dependencies that might otherwise link dynamically.
+#        go build -ldflags "-s -w -extldflags \"-static\"" -o ${_APP_NAME}-windows-${SHORT_SHA}.exe # <-- Add ldflags and .exe extension
+#    dir: lab-factory
+
+  # Step 4: Zip the binaries (renamed from 3 to 4 for clarity)
+  - name: 'ubuntu'
+    id: 'Zip Artifacts'
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        apt-get update && apt-get install -y zip
+        zip /workspace/${_APP_NAME}-linux-${_TAG_NAME}.zip ${_APP_NAME}-linux-${SHORT_SHA}
+#        zip /workspace/${_APP_NAME}-darwin-${_TAG_NAME}.zip ${_APP_NAME}-darwin-${SHORT_SHA}
+#        # Remember to zip the .exe for Windows
+#        zip /workspace/${_APP_NAME}-windows-${_TAG_NAME}.zip ${_APP_NAME}-windows-${SHORT_SHA}.exe
+    dir: lab-factory
+
+  # Step 5: Upload to GCS (renamed from 4 to 5 for clarity)
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    id: 'Upload to GCS'
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        gsutil cp /workspace/${_APP_NAME}*.zip gs://${_BUCKET_NAME}/${_APP_NAME}/${_TAG_NAME}/
+
+artifacts:
+  objects:
+    location: 'gs://${_BUCKET_NAME}/${_APP_NAME}/${_TAG_NAME}/'
+    paths: ['${_APP_NAME}-*.zip']
+
+options:
+  substitution_option: 'ALLOW_LOOSE'
+  logging: CLOUD_LOGGING_ONLY
+
+# gcloud builds submit --config cloudbuild.yaml --substitutions=_BUCKET_NAME=your-gcs-bucket-name,_APP_NAME=my-go-app
+substitutions:
+  _BUCKET_NAME: "cmdlinezero-releases" # Provide a default or override when running the build
+  _APP_NAME: "claat"                   # Default base name for the compiled application binaries
+  _TAG_NAME: "latest"                  # Default tag name for the compiled application binaries

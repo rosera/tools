@@ -19,7 +19,7 @@ For more info run `claat help`.
 
 Perform an export for a Google Doc to Markdown using Qwiklabs Formatting
 ```
-./claat export -o labs -e qwiklabs.md -f md [GDOC_ID]
+./claat export -o labs -e qwiklabs_md.md -f md [GDOC_ID]
 ```
 
 Perform an export using a user authentication token
@@ -27,6 +27,22 @@ Perform an export using a user authentication token
 ./claat export -auth [TOKEN] -o labs -e qwiklabs.md -f md [GDOC_ID]
 ```
 
+## Codelabs
+
+1. Perform an export from a Google Doc to Markdown using Codelab Formatting
+```
+./claat export -o labs -e md -f md [GDOC_ID]
+```
+
+2. Perform an export from a Markdown to HTML using Codelab Formatting
+```
+./claat export -o labs -e html [MARKDOWN_FILE]
+```
+
+3. Perform an export using a user authentication token
+```
+./claat export -auth [TOKEN] -o labs -e md -f md [GDOC_ID]
+```
 
 ## Install
 
