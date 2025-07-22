@@ -12,7 +12,7 @@ steps:
       - |
         # go mod tidy # Uncomment if you need to run this before building
         go build -ldflags "-s -w -extldflags \"-static\"" -o ${_APP_NAME}-linux-${SHORT_SHA} # <-- Add ldflags here
-    dir: lab-factory
+    dir: claat 
 
 #  # Step 2: Build for darwin/amd64
 #  - name: 'golang:1.24'
@@ -63,7 +63,7 @@ steps:
 #        zip /workspace/${_APP_NAME}-darwin-${_TAG_NAME}.zip ${_APP_NAME}-darwin-${SHORT_SHA}
 #        # Remember to zip the .exe for Windows
 #        zip /workspace/${_APP_NAME}-windows-${_TAG_NAME}.zip ${_APP_NAME}-windows-${SHORT_SHA}.exe
-    dir: lab-factory
+    dir: claat 
 
   # Step 5: Upload to GCS (renamed from 4 to 5 for clarity)
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
