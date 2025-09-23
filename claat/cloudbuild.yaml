@@ -12,63 +12,64 @@ steps:
       - |
         # go mod tidy
         go build -o ${_APP_NAME}-linux-${SHORT_SHA}
+    dir: tools/claat
 
-  # Step 2: Build for darwin/amd64
-  - name: 'golang:1.24'
-    id: 'Build Darwin AMD64 Binary'
-    env:
-      - GOOS=darwin
-      - GOARCH=amd64
-      - CGO_ENABLED=0
-    entrypoint: bash
-    args:
-      - -c
-      - |
-        # go mod tidy
-        go build -o ${_APP_NAME}-darwin-${SHORT_SHA}
-
-  # Step 3: Build for Windows/amd64
-  - name: 'golang:1.24'
-    id: 'Build Windows AMD64 Binary'
-    env:
-      - GOOS=windows
-      - GOARCH=amd64
-      - CGO_ENABLED=0
-    entrypoint: bash
-    args:
-      - -c
-      - |
-        # go mod tidy
-        go build -o ${_APP_NAME}-windows-${SHORT_SHA}
-
-
-  # Step 3: Zip the binaries
-  - name: 'ubuntu'
-    id: 'Zip Artifacts'
-    entrypoint: bash
-    args:
-      - -c
-      - |
-        apt-get update && apt-get install -y zip
-        zip /workspace/${_APP_NAME}-linux-${SHORT_SHA}.zip ${_APP_NAME}-linux-${SHORT_SHA}
-        zip /workspace/${_APP_NAME}-darwin-${SHORT_SHA}.zip ${_APP_NAME}-darwin-${SHORT_SHA}
-        zip /workspace/${_APP_NAME}-windows-${SHORT_SHA}.zip ${_APP_NAME}-windows-${SHORT_SHA}
-
-        zip /workspace/${_APP_NAME}-linux-${_TAG_NAME}.zip ${_APP_NAME}-linux-${SHORT_SHA}
-        zip /workspace/${_APP_NAME}-darwin-${_TAG_NAME}.zip ${_APP_NAME}-darwin-${SHORT_SHA}
-        zip /workspace/${_APP_NAME}-windows-${_TAG_NAME}.zip ${_APP_NAME}-windows-${SHORT_SHA}
-
-  # Step 4: Upload to GCS
-  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
-    id: 'Upload to GCS'
-    entrypoint: bash
-    args:
-      - -c
-      - |
-        gsutil cp /workspace/${_APP_NAME}*.zip gs://${_BUCKET_NAME}/${_APP_NAME}/${SHORT_SHA}/
-        # Set Cache-Control on latest - invalidate current cache
-        gsutil -h Cache-Control:"public, max-age=0" cp /workspace/${_APP_NAME}*-${_TAG_NAME}.zip gs://${_BUCKET_NAME}/${_APP_NAME}/${_TAG_NAME}/
-        # gsutil -h Cache-Control:"public, max-age=0" cp ${_WEB_FOLDER}/${_WEB_TEMPLATE} gs://${_REVIEW_DEST}/
+#  # Step 2: Build for darwin/amd64
+#  - name: 'golang:1.24'
+#    id: 'Build Darwin AMD64 Binary'
+#    env:
+#      - GOOS=darwin
+#      - GOARCH=amd64
+#      - CGO_ENABLED=0
+#    entrypoint: bash
+#    args:
+#      - -c
+#      - |
+#        # go mod tidy
+#        go build -o ${_APP_NAME}-darwin-${SHORT_SHA}
+#
+#  # Step 3: Build for Windows/amd64
+#  - name: 'golang:1.24'
+#    id: 'Build Windows AMD64 Binary'
+#    env:
+#      - GOOS=windows
+#      - GOARCH=amd64
+#      - CGO_ENABLED=0
+#    entrypoint: bash
+#    args:
+#      - -c
+#      - |
+#        # go mod tidy
+#        go build -o ${_APP_NAME}-windows-${SHORT_SHA}
+#
+#
+#  # Step 3: Zip the binaries
+#  - name: 'ubuntu'
+#    id: 'Zip Artifacts'
+#    entrypoint: bash
+#    args:
+#      - -c
+#      - |
+#        apt-get update && apt-get install -y zip
+#        zip /workspace/${_APP_NAME}-linux-${SHORT_SHA}.zip ${_APP_NAME}-linux-${SHORT_SHA}
+#        zip /workspace/${_APP_NAME}-darwin-${SHORT_SHA}.zip ${_APP_NAME}-darwin-${SHORT_SHA}
+#        zip /workspace/${_APP_NAME}-windows-${SHORT_SHA}.zip ${_APP_NAME}-windows-${SHORT_SHA}
+#
+#        zip /workspace/${_APP_NAME}-linux-${_TAG_NAME}.zip ${_APP_NAME}-linux-${SHORT_SHA}
+#        zip /workspace/${_APP_NAME}-darwin-${_TAG_NAME}.zip ${_APP_NAME}-darwin-${SHORT_SHA}
+#        zip /workspace/${_APP_NAME}-windows-${_TAG_NAME}.zip ${_APP_NAME}-windows-${SHORT_SHA}
+#
+#  # Step 4: Upload to GCS
+#  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+#    id: 'Upload to GCS'
+#    entrypoint: bash
+#    args:
+#      - -c
+#      - |
+#        gsutil cp /workspace/${_APP_NAME}*.zip gs://${_BUCKET_NAME}/${_APP_NAME}/${SHORT_SHA}/
+#        # Set Cache-Control on latest - invalidate current cache
+#        gsutil -h Cache-Control:"public, max-age=0" cp /workspace/${_APP_NAME}*-${_TAG_NAME}.zip gs://${_BUCKET_NAME}/${_APP_NAME}/${_TAG_NAME}/
+#        # gsutil -h Cache-Control:"public, max-age=0" cp ${_WEB_FOLDER}/${_WEB_TEMPLATE} gs://${_REVIEW_DEST}/
 
 artifacts:
   objects:
