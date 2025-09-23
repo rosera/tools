@@ -12,7 +12,7 @@ steps:
       - |
         # go mod tidy
         go build -o ${_APP_NAME}-linux-${SHORT_SHA}
-    dir: tools/claat
+    dir: claat
 
 #  # Step 2: Build for darwin/amd64
 #  - name: 'golang:1.24'
