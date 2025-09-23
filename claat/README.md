@@ -4,9 +4,20 @@ The program takes an input in form of a resource location,
 which can either be a Google Doc ID, local file path or an arbitrary URL.
 It then converts the input into a codelab format, HTML by default.
 
-An amended CLAAT for Qwiklabs can be downloaded here:
-[Qwiklab Version](https://storage.cloud.google.com/cmdlinezero-releases/claat/latest/claat-linux-latest.zip)
+## Download
 
+![Cloud Build Status](https://cloudbuild-monitor-960715493694.us-central1.run.app/badge/0fc9d9dc-2b61-4aa2-942d-2eae919aa04a)
+
+Code is continuously integrated/deployed, with latest versions available below:
+An amended CLAAT for Qwiklabs can be downloaded here:
+
+| Architecture | Download |
+|--------------|----------|
+| Linux AMD64    | [Link](https://storage.cloud.google.com/cmdlinezero-releases/claat/latest/claat-linux-latest.zip)   |
+| Darwin AMD64   | [Link](https://storage.cloud.google.com/cmdlinezero-releases/claat/latest/claat-darwin-latest.zip)  |
+| Windows AMD64  | [Link](https://storage.cloud.google.com/cmdlinezero-releases/claat/latest/claat-windows-latest.zip) |
+
+---
 
 For more info run `claat help`.
 
